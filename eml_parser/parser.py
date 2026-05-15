@@ -105,6 +105,15 @@ class CustomPolicy(email.policy.EmailPolicy):
 
             return eml_parser.decode.robust_string2date(value).isoformat()
 
+        elif header in ('sender', 'resent-sender', 'to', 'resent-to', 'cc', 'resent-cc', 'bcc', 'resent-bcc', 'from', 'resent-from', 'reply-to'):
+            try:
+                return super().header_fetch_parse(name, value)
+            except RecursionError:
+                # This can happen when the recursion gets too deep in in the stdlib recursive descent parser.
+                # In this case, the header is certainly pathological. We still try to extract some addresses.
+                m = eml_parser.regexes.email_regex.findall(value)
+                return ', '.join(m)
+
         return super().header_fetch_parse(name, value)
 
 
@@ -172,6 +181,8 @@ class EmlParser:
 
         if self.email_force_tld:
             eml_parser.regexes.email_regex = eml_parser.regexes.email_force_tld_regex
+        else:
+            eml_parser.regexes.email_regex = eml_parser.regexes.email_no_force_tld_regex
 
         # If no whitelisting is required, set to emtpy list
         if 'whiteip' not in self.pconf:
