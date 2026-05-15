@@ -97,7 +97,6 @@ url_regex_href = re.compile(
 )
 
 date_regex = re.compile(r""";[ \w\s:,+\-()]+$""")
-noparenthesis_regex = re.compile(r"""\([^()]*\)""")
 cleanline_regex = re.compile(r"""(^[;\s]{0,}|[;\s]{0,}$)""")
 
 escape_special_regex_chars = re.compile(r"""([\^$\[\]()+?.])""")
