@@ -11,6 +11,7 @@ import email.message
 import email.policy
 import email.utils
 import hashlib
+import html
 import ipaddress
 import logging
 import os.path
@@ -496,6 +497,14 @@ class EmlParser:
                     if valid_domain:
                         list_observed_dom[match.lower()] = 1
 
+                # URLs do not necessarily appear as-is in the body, as they may contain escaped entities.
+                # For this reason, we have to extract the domains again from each parsed URL.
+                for url in list_observed_urls + list_observed_urls_noscheme:
+                    for match in eml_parser.regexes.dom_regex.findall(url):
+                        valid_domain = self.get_valid_domain_or_ip(match.lower())
+                        if valid_domain:
+                            list_observed_dom[match.lower()] = 1
+
                 for ip_regex in (eml_parser.regexes.ipv4_regex, eml_parser.regexes.ipv6_regex):
                     for match in ip_regex.findall(body_slice):
                         valid_ip = self.get_valid_domain_or_ip(match.lower())
@@ -759,6 +768,7 @@ class EmlParser:
         Returns:
             str: Returns a valid URL, if found in the input string.
         """
+        url = html.unescape(url)  # In case the URL contains HTML entities
         if '.' not in url and '[' not in url:
             # if we found a URL like e.g. http://afafasasfasfas; that makes no
             # sense, thus skip it, but include http://[2001:db8::1]
