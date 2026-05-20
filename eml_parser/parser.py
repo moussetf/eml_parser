@@ -11,7 +11,6 @@ import email.message
 import email.policy
 import email.utils
 import hashlib
-import html
 import ipaddress
 import logging
 import os.path
@@ -768,7 +767,9 @@ class EmlParser:
         Returns:
             str: Returns a valid URL, if found in the input string.
         """
-        url = html.unescape(url)  # In case the URL contains HTML entities
+        if '&' in url:
+            url = unescape(url)
+
         if '.' not in url and '[' not in url:
             # if we found a URL like e.g. http://afafasasfasfas; that makes no
             # sense, thus skip it, but include http://[2001:db8::1]
@@ -801,9 +802,6 @@ class EmlParser:
         # filter bogus URLs
         if url.endswith('://'):
             return None
-
-        if '&' in url:
-            url = unescape(url)
 
         return url
 
